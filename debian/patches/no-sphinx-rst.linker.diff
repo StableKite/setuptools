@@ -1,0 +1,17 @@
+--- a/docs/conf.py
++++ b/docs/conf.py
+@@ -2,12 +2,13 @@ extensions = [
+     'sphinx.ext.autodoc',
+     'jaraco.packaging.sphinx',
+ ]
++extensions = []
+ 
+ master_doc = "index"
+ html_theme = "furo"
+ 
+ # Link dates and other references in the changelog
+-extensions += ['rst.linker']
++#extensions += ['rst.linker']
+ link_files = {
+     '../NEWS.rst': dict(
+         using=dict(
