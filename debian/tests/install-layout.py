@@ -41,8 +41,9 @@ print(json.dumps({key: getattr(command, key) for key in
         self.assertIn('site-packages', paths['install_lib'])
 
     def test_unknown_layout_rejected(self):
-        with self.assertRaises(subprocess.CalledProcessError):
-            self.paths(install_layout='unknown')
+        for layout in ('unknown', 'unix'):
+            with self.subTest(layout=layout), self.assertRaises(subprocess.CalledProcessError):
+                self.paths(install_layout=layout)
 
     def test_actual_install(self):
         with tempfile.TemporaryDirectory(prefix='setuptools-layout-') as temporary:

@@ -30,7 +30,7 @@ Last-Update: 2026-11-12
      description = "install everything from build directory"
  
      user_options = [
-+        ('install-layout=', None, 'installation layout (deb or unix)'),
++        ('install-layout=', None, 'installation layout (deb)'),
          # Select installation scheme and set base director(y|ies)
          ('prefix=', None, "installation prefix"),
          ('exec-prefix=', None, "(Unix only) prefix for platform-specific files"),
@@ -62,7 +62,7 @@ Last-Update: 2026-11-12
 +                if self.prefix_option is None:
 +                    self.prefix = self.exec_prefix = '/usr'
 +                    self.install_base = self.install_platbase = '/usr'
-+            elif layout != 'unix':
++            else:
 +                raise DistutilsOptionError('unknown value for --install-layout')
          _select_scheme(self, name)
  
