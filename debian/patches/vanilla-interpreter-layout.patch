@@ -1,0 +1,69 @@
+Description: Keep Debian install layout independent of interpreter patches
+ The Debian setuptools patch accesses install_layout and prefix_option on the
+ install command. Supply those attributes and the explicit deb layout even
+ when the interpreter has no optional _distutils_system_mod or deb_system
+ sysconfig scheme. Preserve explicit prefixes and ordinary upstream layouts.
+Author: Robolightning <irobolightning@gmail.com>
+Forwarded: no
+Last-Update: 2026-11-12
+
+--- a/setuptools/_distutils/command/install.py
++++ b/setuptools/_distutils/command/install.py
+@@ -46,6 +46,16 @@
+         'purelib': '{base}/lib/{implementation_lower}',
+         'platlib': '{base}/{platlibdir}/{implementation_lower}',
+         'headers': '{base}/include/{implementation_lower}/{dist_name}',
++        'scripts': '{base}/bin',
++        'data': '{base}',
++    },
++    # Keep the Debian setuptools package usable with a vanilla interpreter,
++    # where Python's optional _distutils_system_mod and deb_system scheme
++    # are absent. System-provided schemes still override these defaults.
++    'deb_system': {
++        'purelib': '{base}/lib/python3/dist-packages',
++        'platlib': '{platbase}/lib/python3/dist-packages',
++        'headers': '{base}/include/python{py_version_short}{abiflags}/{dist_name}',
+         'scripts': '{base}/bin',
+         'data': '{base}',
+     },
+@@ -175,6 +185,7 @@
+     description = "install everything from build directory"
+ 
+     user_options = [
++        ('install-layout=', None, 'installation layout (deb or unix)'),
+         # Select installation scheme and set base director(y|ies)
+         ('prefix=', None, "installation prefix"),
+         ('exec-prefix=', None, "(Unix only) prefix for platform-specific files"),
+@@ -252,6 +263,8 @@
+         self.exec_prefix: str | None = None
+         self.home: str | None = None
+         self.user = False
++        self.install_layout = None
++        self.prefix_option = None
+ 
+         # These select only the installation base; it's up to the user to
+         # specify the installation scheme (currently, that means supplying
+@@ -526,6 +539,7 @@
+ 
+     def finalize_unix(self) -> None:
+         """Finalizes options for posix platforms."""
++        self.prefix_option = self.prefix
+         if self.install_base is not None or self.install_platbase is not None:
+             incomplete_scheme = (
+                 (
+@@ -596,6 +610,15 @@
+                 )
+ 
+     def select_scheme(self, name) -> None:
++        if name == 'posix_prefix' and self.install_layout:
++            layout = self.install_layout.lower()
++            if layout == 'deb':
++                name = 'deb_system'
++                if self.prefix_option is None:
++                    self.prefix = self.exec_prefix = '/usr'
++                    self.install_base = self.install_platbase = '/usr'
++            elif layout != 'unix':
++                raise DistutilsOptionError('unknown value for --install-layout')
+         _select_scheme(self, name)
+ 
+     def _expand_attrs(self, attrs):
